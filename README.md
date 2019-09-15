@@ -6,6 +6,8 @@ It works with any digit from 0-9 and the symbols +,-,x
 
 > White blackground and black digits are necessary
 
+![Digit Recognition](./demo.gif)
+
 ## Convolutional Neural Network
 * Two Convolutional Layers
 * Two MaxPooling Layers
