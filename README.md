@@ -22,7 +22,12 @@ It works with any digit from 0-9 and the symbols +,-,x
 1. Create a virtual environment and activate:
 ```bash
 python -m venv venv
+
+On Linux
 . venv/bin/activate
+
+On Windows
+venv\Scripts\activate
 ```
 
 2. Install the dependencies
