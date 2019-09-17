@@ -19,22 +19,23 @@ It works with any digit from 0-9 and the symbols +,-,x
 
 ## Installation
 
-1. Create a virtual environment and activate:
+1. Create a virtual environment:
 ```bash
 python -m venv venv
 ```
 
-On Linux
-```bash
-. venv/bin/activate
-```
+2. Activate the virtual environment:
+  On Linux
+  ```bash
+  . venv/bin/activate
+  ```
 
-On Windows
-```bash
-venv\Scripts\activate
-```
+  On Windows
+  ```bash
+  venv\Scripts\activate
+  ```
 
-2. Install the dependencies
+3. Install the dependencies
 ```
 pip install -r requirements.txt
 ```
