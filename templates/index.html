@@ -36,7 +36,7 @@
     <div id="container">
         <div id="operation" class="draw">
         </div>
-        <button type="button" onclick="clear()">Clear</button><br>
+        <button id="clear" type="button" onclick="clear()">Clear</button><br>
         <button type="button" onclick="predict()">Predict</button>
     </div>
     <div style="margin-top: 50px; text-align: center;">
@@ -61,6 +61,9 @@
         p.setup = () => {
             p.createCanvas(600, 200);
             p.background(255);
+            document.getElementById('clear').onclick = () => {
+                p.background(255);
+            }
         }
 
         p.draw = () => {
@@ -72,6 +75,11 @@
             p.strokeWeight(3);
             p.line(p.mouseX, p.mouseY, p.pmouseX, p.pmouseY);
         }
+
+    }
+
+    function clear() {
+        const canvasD1 = document.getElementById('defaultCanvas0');
     }
 
     function onLoad() {
