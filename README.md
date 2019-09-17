@@ -22,11 +22,15 @@ It works with any digit from 0-9 and the symbols +,-,x
 1. Create a virtual environment and activate:
 ```bash
 python -m venv venv
+```
 
 On Linux
+```bash
 . venv/bin/activate
+```
 
 On Windows
+```bash
 venv\Scripts\activate
 ```
 
