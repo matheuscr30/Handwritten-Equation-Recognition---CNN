@@ -36,22 +36,18 @@
     <div id="container">
         <div id="operation" class="draw">
         </div>
-        <button id="clear" type="button" onclick="clear()">Clear</button><br>
+        <button id="clear" type="button">Clear</button><br>
         <button type="button" onclick="predict()">Predict</button>
     </div>
     <div style="margin-top: 50px; text-align: center;">
       <div>
         Operation:
-        <div id=operation-container>
-
-        </div>
+        <div id=operation-container></div>
       </div>
 
       <div style="margin-top: 25px">
         Solution:
-        <div id=solution-container>
-
-        </div>
+        <div id=solution-container></div>
       </div>
     </div>
 
@@ -66,20 +62,13 @@
             }
         }
 
-        p.draw = () => {
-
-        }
+        p.draw = () => {}
 
         p.mouseDragged = () => {
             p.stroke(0);
             p.strokeWeight(3);
             p.line(p.mouseX, p.mouseY, p.pmouseX, p.pmouseY);
         }
-
-    }
-
-    function clear() {
-        const canvasD1 = document.getElementById('defaultCanvas0');
     }
 
     function onLoad() {

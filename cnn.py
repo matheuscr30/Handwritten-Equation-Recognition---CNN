@@ -34,14 +34,12 @@ def load_images_from_folder(folder):
     train_data = []
 
     for filename in os.listdir(folder):
-        img = cv2.imread(os.path.join(folder,filename), cv2.IMREAD_GRAYSCALE)
-        img = ~img
+        img = cv2.imread(os.path.join(folder,filename), cv2.IMREAD_GRAYSCALE) # Convert to Image to Grayscale
+        img = ~img # Invert the bits of image 255 -> 0
         if img is not None:
-            ret, thresh = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
-            ctrs, ret = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-            cnt = sorted(ctrs, key=lambda ctr: cv2.boundingRect(ctr)[0])
-            w = int(28)
-            h = int(28)
+            _, thresh = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY) # Set bits > 127 to 1 and <= 127 to 0
+            ctrs, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+            cnt = sorted(ctrs, key=lambda ctr: cv2.boundingRect(ctr)[0]) # Sort by x
             maxi = 0
             for c in cnt:
                 x, y, w, h = cv2.boundingRect(c)
@@ -51,9 +49,9 @@ def load_images_from_folder(folder):
                     y_max = y
                     w_max = w
                     h_max = h
-            im_crop = thresh[y_max:y_max+h_max+10, x_max:x_max+w_max+10]
-            im_resize = cv2.resize(im_crop, (28, 28))
-            im_resize = np.reshape(im_resize, (784, 1))
+            im_crop = thresh[y_max:y_max+h_max+10, x_max:x_max+w_max+10] # Crop the image as most as possible
+            im_resize = cv2.resize(im_crop, (28, 28)) # Resize to (28, 28)
+            im_resize = np.reshape(im_resize, (784, 1)) # Flat the matrix
             train_data.append(im_resize)
     return train_data
 
@@ -81,6 +79,58 @@ def load_all_imgs():
     df=pd.DataFrame(data,index=None)
     df.to_csv('model/train_data.csv',index=False)
 
+def extract_imgs(img):
+    img = ~img # Invert the bits of image 255 -> 0
+    _, thresh = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY) # Set bits > 127 to 1 and <= 127 to 0
+    ctrs, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cnt = sorted(ctrs, key=lambda ctr: cv2.boundingRect(ctr)[0]) # Sort by x
+
+    img_data = []
+    rects = []
+    for c in cnt :
+        x, y, w, h = cv2.boundingRect(c)
+        rect = [x, y, w, h]
+        rects.append(rect)
+
+    bool_rect = []
+    # Check when two rectangles collide
+    for r in rects:
+        l = []
+        for rec in rects:
+            flag = 0
+            if rec != r:
+                if r[0] < (rec[0] + rec[2] + 10) and rec[0] < (r[0] + r[2] + 10) and r[1] < (rec[1] + rec[3] + 10) and rec[1] < (r[1] + r[3] + 10):
+                    flag = 1
+                l.append(flag)
+            else:
+                l.append(0)
+        bool_rect.append(l)
+
+    dump_rect = []
+    # Discard the small collide rectangle
+    for i in range(0, len(cnt)):
+        for j in range(0, len(cnt)):
+            if bool_rect[i][j] == 1:
+                area1 = rects[i][2] * rects[i][3]
+                area2 = rects[j][2] * rects[j][3]
+                if(area1 == min(area1,area2)):
+                    dump_rect.append(rects[i])
+
+    # Get the final rectangles
+    final_rect = [i for i in rects if i not in dump_rect]
+    for r in final_rect:
+        x = r[0]
+        y = r[1]
+        w = r[2]
+        h = r[3]
+
+        im_crop = thresh[y:y+h+10, x:x+w+10] # Crop the image as most as possible
+        im_resize = cv2.resize(im_crop, (28, 28)) # Resize to (28, 28)
+        im_resize = np.reshape(im_resize, (1, 28, 28)) # Flat the matrix
+        img_data.append(im_resize)
+
+    return img_data
+
 class ConvolutionalNeuralNetwork:
     def __init__(self):
         if os.path.exists('model/model_weights.h5') and os.path.exists('model/model.json'):
@@ -100,7 +150,7 @@ class ConvolutionalNeuralNetwork:
         # Create model
         print("Creating Model...")
         self.model = Sequential()
-        self.model.add(Conv2D(first_conv_num_filters, (5,5), input_shape=(28, 28, 1), activation='relu'))
+        self.model.add(Conv2D(first_conv_num_filters, first_conv_filter_size, input_shape=(28, 28, 1), activation='relu'))
         self.model.add(MaxPooling2D(pool_size=pool_size))
         self.model.add(Conv2D(second_conv_num_filters, second_conv_filter_size, activation='relu'))
         self.model.add(MaxPooling2D(pool_size=pool_size))
@@ -172,59 +222,14 @@ class ConvolutionalNeuralNetwork:
         os.remove('aux.png')
 
         if img is not None:
-            img = ~img
-            _, thresh = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
-            ctrs, _ = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            cnt = sorted(ctrs, key=lambda ctr: cv2.boundingRect(ctr)[0])
-            w = int(28)
-            h = int(28)
-            train_data = []
-            rects = []
-            for c in cnt :
-                x, y, w, h = cv2.boundingRect(c)
-                rect = [x, y, w, h]
-                rects.append(rect)
-
-            bool_rect = []
-            for r in rects:
-                l = []
-                for rec in rects:
-                    flag = 0
-                    if rec != r:
-                        if r[0] < (rec[0] + rec[2] + 10) and rec[0] < (r[0] + r[2] + 10) and r[1] < (rec[1] + rec[3] + 10) and rec[1] < (r[1] + r[3] + 10):
-                            flag = 1
-                        l.append(flag)
-                    if rec == r:
-                        l.append(0)
-                bool_rect.append(l)
-            dump_rect = []
-            for i in range(0, len(cnt)):
-                for j in range(0, len(cnt)):
-                    if bool_rect[i][j] == 1:
-                        area1 = rects[i][2] * rects[i][3]
-                        area2 = rects[j][2] * rects[j][3]
-                        if(area1 == min(area1,area2)):
-                            dump_rect.append(rects[i])
-
-            final_rect = [i for i in rects if i not in dump_rect]
-            for r in final_rect:
-                x = r[0]
-                y = r[1]
-                w = r[2]
-                h = r[3]
-                im_crop = thresh[y:y+h+10, x:x+w+10]
-
-                im_resize = cv2.resize(im_crop, (28, 28))
-
-                im_resize = np.reshape(im_resize, (1, 28, 28))
-                train_data.append(im_resize)
+            img_data = extract_imgs(img)
 
             operation = ''
-            for i in range(len(train_data)):
-                train_data[i] = np.array(train_data[i])
-                train_data[i] = train_data[i].reshape(-1, 28, 28, 1)
+            for i in range(len(img_data)):
+                img_data[i] = np.array(img_data[i])
+                img_data[i] = img_data[i].reshape(-1, 28, 28, 1)
 
-                result = self.model.predict_classes(train_data[i])
+                result = self.model.predict_classes(img_data[i])
 
                 if result[0] == 10:
                     operation += '+'

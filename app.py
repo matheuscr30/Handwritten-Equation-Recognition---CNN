@@ -24,6 +24,7 @@ def calculate_operation(operation):
     operator = ''
     first_buffer = ''
     second_buffer = ''
+
     for i in range(len(operation)):
         if operation[i].isdigit():
             if len(second_buffer) == 0 and len(operator) == 0:
